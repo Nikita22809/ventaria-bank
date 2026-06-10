@@ -115,12 +115,12 @@ async def transfer_coins(data: TransferModel):
 async def buy_stars(data: UserRequest):
     try:
         invoice_link = await bot.create_invoice_link(
-            title="1000 вент (VNT)",
+            title="0 вент (VNT)",
             description="Покупка внутрибанковской валюты VNT за Telegram Stars",
             payload=f"stars_buy_{data.tg_id}",
             provider_token="", # Для Stars ПУСТО
             currency="XTR",
-            prices=[{"label": "1000 VNT", "amount": 10}] # 10 Stars
+            prices=[{"label": "0 VNT", "amount": 10}] # 10 Stars
         )
         return {"invoice_link": invoice_link}
     except Exception as e:
