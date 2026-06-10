@@ -10,6 +10,7 @@
             --card-bg: #ffffff;
             --text-color: #333333;
             --accent-color: #4a6fa5;
+            --success-color: #28a745;
             --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         
@@ -25,7 +26,6 @@
             min-height: 100vh;
         }
 
-        /* Анимация плавного появления контейнера */
         .container {
             background-color: var(--card-bg);
             padding: 30px;
@@ -74,7 +74,6 @@
             display: none; 
         }
 
-        /* Анимация сдвига при переключении вкладок */
         .tab-content.active { 
             display: block; 
             animation: slideIn 0.4s ease-out; 
@@ -85,11 +84,85 @@
             to { opacity: 1; transform: translateX(0); }
         }
 
+        /* Стили профиля */
+        .profile-box {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .profile-box p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .profile-box span {
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
         .balance { 
-            font-size: 26px; 
+            font-size: 28px; 
             font-weight: bold; 
-            margin: 20px 0; 
+            margin: 15px 0; 
             color: #2b2b2b;
+        }
+
+        /* Форма доната/пополнения */
+        .donate-section {
+            background: #fff;
+            border: 1px dashed var(--accent-color);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        .donate-section h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        .calc-text {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .calc-text strong {
+            color: var(--success-color);
+        }
+
+        .btn-action {
+            width: 100%;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-action:hover {
+            background-color: #218838;
         }
 
         .history-item {
@@ -107,42 +180,140 @@
 
 <div class="container">
     <h2>VNT Банк</h2>
+    
     <div class="nav-bar">
         <button class="nav-btn" onclick="switchTab('main')">Главная</button>
         <button class="nav-btn" onclick="switchTab('history')">История</button>
     </div>
 
     <div id="tab-main" class="tab-content active">
+        
+        <div class="profile-box">
+            <p>Пользователь: <span id="username-display">Загрузка...</span></p>
+            <p>ID: <span id="userid-display">00000000</span></p>
+        </div>
+
         <p>Ваш баланс:</p>
-        <div class="balance">0 VNT</div>
+        <div class="balance"><span id="balance-value">0</span> VNT</div>
+
+        <div class="donate-section">
+            <h4>Пополнение баланса (Звёзды)</h4>
+            <div class="input-group">
+                <label for="stars-input">Сколько звёзд хотите задонатить?</label>
+                <input type="number" id="stars-input" value="1" min="1" oninput="calculateVnt()">
+            </div>
+            
+            <div class="calc-text">
+                К зачислению: <strong id="vnt-calc">1</strong> VNT <br>
+                <small style="color: #999;">(Курс: 1 звезда = 1 VNT)</small>
+            </div>
+
+            <button class="btn-action" onclick="sendDonate()">Купить пополнение</button>
+        </div>
+
     </div>
 
     <div id="tab-history" class="tab-content">
         <h3>История операций</h3>
-        <div class="history-list">
+        <div class="history-list" id="history-container">
             <div class="history-item">
-                <span>Пополнение</span>
-                <span style="color: #28a745; font-weight: bold;">+500</span>
-            </div>
-            <div class="history-item">
-                <span>Перевод</span>
-                <span style="color: #dc3545; font-weight: bold;">-200</span>
+                <span>Стартовый бонус</span>
+                <span style="color: #28a745; font-weight: bold;">+0</span>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Функция переключения вкладок
+    // Тестовые данные (если страница открыта не из Telegram, подставятся они)
+    let currentUserId = 12345678;
+    let currentUsername = "Nikita_User";
+
+    // Пытаемся получить реальные данные из Telegram WebApp, если скрипт запущен там
+    try {
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                currentUserId = tg.initDataUnsafe.user.id;
+                currentUsername = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name;
+            }
+        }
+    } catch (e) {
+        console.log("Запущено вне Telegram WebApp, используем тестовый профиль");
+    }
+
+    // Выводим данные профиля на экран при загрузке страницы
+    document.getElementById("username-display").innerText = "@" + currentUsername;
+    document.getElementById("userid-display").innerText = currentUserId;
+
+    // Автоматический подсчет VNT при изменении количества звёзд
+    function calculateVnt() {
+        const starsInput = document.getElementById("stars-input").value;
+        const stars = parseInt(starsInput) || 0;
+        // Курс 1 звезда = 1 вент
+        const vnt = stars * 1; 
+        document.getElementById("vnt-calc").innerText = vnt;
+    }
+
+    // Переключение между вкладками
     function switchTab(tabId) {
-        // Скрываем все вкладки
         document.querySelectorAll('.tab-content').forEach(tab => {
             tab.classList.remove('active');
         });
-        // Показываем нужную
         const activeTab = document.getElementById('tab-' + tabId);
         if (activeTab) {
             activeTab.classList.add('active');
+        }
+    }
+
+    // Функция отправки доната на бэкенд FastAPI
+    async function sendDonate() {
+        const starsInput = document.getElementById("stars-input").value;
+        const starsCount = parseInt(starsInput);
+
+        if (!starsCount || starsCount <= 0) {
+            alert("Введите корректное число звёзд!");
+            return;
+        }
+
+        // Данные запроса, соответствующие схеме BuyStarsRequest в server.py
+        const requestData = {
+            user_id: currentUserId,
+            stars: starsCount
+        };
+
+        try {
+            // Делаем POST-запрос на наш сервер
+            const response = await fetch('/buy_stars', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                alert(`Успешно! Вы отправили ${starsCount} звёзд.`);
+                
+                // Обновляем баланс на экране (1 звезда = 1 VNT)
+                const currentBalance = parseInt(document.getElementById("balance-value").innerText) || 0;
+                const newBalance = currentBalance + starsCount;
+                document.getElementById("balance-value").innerText = newBalance;
+
+                // Добавляем запись в историю
+                const historyContainer = document.getElementById("history-container");
+                const newItem = document.createElement("div");
+                newItem.className = "history-item";
+                newItem.innerHTML = `<span>Покупка звёзд</span><span style="color: #28a745; font-weight: bold;">+${starsCount} VNT</span>`;
+                historyContainer.insertBefore(newItem, historyContainer.firstChild);
+            } else {
+                alert("Ошибка сервера при обработке платежа.");
+            }
+        } catch (error) {
+            console.error("Ошибка:", error);
+            alert("Не удалось связаться с сервером. Проверьте сеть или логи.");
         }
     }
 </script>
