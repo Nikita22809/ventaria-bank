@@ -1,38 +1,113 @@
-```python
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-import time
+```html
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VNT Банк</title>
+    <style>
+        :root {
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --accent-color: #4a6fa5;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            animation: fadeIn 0.8s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        h2 { color: var(--accent-color); margin-bottom: 20px; }
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: slideIn 0.5s ease; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .balance { font-size: 24px; font-weight: bold; margin: 20px 0; }
+        .history-item {
+            background: #f1f3f5;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
 
-app = FastAPI()
+<div class="container">
+    <h2>VNT Банк</h2>
+    <div class="nav-bar">
+        <button class="nav-btn" onclick="switchTab('main')">Главная</button>
+        <button class="nav-btn" onclick="switchTab('history')">История</button>
+    </div>
 
-app.add_middleware(
- CORSMiddleware,
- allow_origins=["*"],
- allow_credentials=True,
- allow_methods=["*"],
- allow_headers=["*"],
-)
+    <div id="tab-main" class="tab-content active">
+        <p>Ваш баланс:</p>
+        <div class="balance">0 VNT</div>
+    </div>
 
-BOT_TOKEN = "8994297709:AAF6-5MAqghke6xdgMxezpr31a2KXT0YWdg"
+    <div id="tab-history" class="tab-content">
+        <h3>История операций</h3>
+        <div class="history-list">
+            <div class="history-item">
+                <span>Пополнение</span>
+                <span style="color: green;">+500</span>
+            </div>
+            <div class="history-item">
+                <span>Перевод</span>
+                <span style="color: red;">-200</span>
+            </div>
+        </div>
+    </div>
+</div>
 
-USERS_DATA = {}
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+    }
+</script>
 
-class UserProfileRequest(BaseModel):
- user_id: int
- username: str = "Без юзернейма"
-
-class BuyStarsRequest(BaseModel):
- user_id: int
- stars: int
-
-def init_user(user_id: int, username: str = "Без юзернейма"):
- if user_id not in USERS_DATA:
- USERS_DATA[user_id] = {
- "id": user_id,
- "username": username,
- "balance": 0,
- 
+</body>
+</html>
 
 ```
-
