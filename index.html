@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VNT Банк</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            min-height: 90vh;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .balance-card {
+            background: var(--tg-theme-secondary-bg-color, #f1f1f1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .balance-val {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--tg-theme-button-color, #2481cc);
+        }
+        .tab-content {
+            display: none;
+            flex-grow: 1;
+        }
+        .active-tab {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .nav-bar {
+            display: flex;
+            justify-content: space-around;
+            background: var(--tg-theme-secondary-bg-color, #f1f1f1);
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            border-top: 1px solid #ddd;
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            color: var(--tg-theme-hint-color, #999);
+            font-size: 14px;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+            padding: 5px 10px;
+        }
+        .nav-btn.active {
+            color: var(--tg-theme-button-color, #2481cc);
+            font-weight: bold;
+        }
+        .shop-item {
+            border: 1px solid var(--tg-theme-secondary-bg-color, #f1f1f1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>🏛 VNT Цифровой Банк</h2>
+    </div>
+
+    <div class="balance-card">
+        <div>Ваш баланс:</div>
+        <div class="balance-val" id="user-balance">0 VNT</div>
+        <div style="font-size: 12px; opacity: 0.6; margin-top: 5px;" id="user-stars">Использовано звезд: 0 ⭐</div>
+    </div>
+
+    <div id="tab-profile" class="tab-content active-tab">
+        <h3>👤 Профиль клиента</h3>
+        <p><strong>Аккаунт: <span id="username">Пользователь</span>!</strong></p>
+        <p>Ваш Telegram ID: <span id="tg-id">-</span></p>
+        <p style="font-size: 13px; color: var(--tg-theme-hint-color);">Ваш кошелек успешно авторизован в экосистеме VNT.</p>
+    </div>
+
+    <div id="tab-transfer" class="tab-content">
+        <h3>💸 Быстрый перевод VNT</h3>
+        <div class="form-group">
+            <label>Получатель (введи его Telegram username без @):</label>
+            <input type="text" id="transfer-username" placeholder="Например: alex_crypto">
+        </div>
+        <div class="form-group">
+            <label>Сумма перевода (VNT):</label>
+            <input type="number" id="transfer-amount" placeholder="0">
+        </div>
+        <button onclick="makeTransfer()">Отправить VNT</button>
+    </div>
+
+    <div id="tab-shop" class="tab-content">
+        <h3>⭐ Пополнение баланса VNT</h3>
+        <div class="shop-item">
+            <div>
+                <strong>Пакет: +1000 вент (VNT)</strong><br>
+                <span style="font-size:12px; opacity:0.7;">Оплата через Telegram Stars</span>
+            </div>
+            <button style="width:auto; margin:0;" onclick="buyWithStars()">10 ⭐</button>
+        </div>
+    </div>
+
+    <div style="height: 60px;"></div>
+
+    <div class="nav-bar">
+        <button class="nav-btn active" onclick="switchTab('profile', this)">Профиль</button>
+        <button class="nav-btn" onclick="switchTab('transfer', this)">Переводы</button>
+        <button class="nav-btn" onclick="switchTab('shop', this)">Обмен ⭐</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        const user = tg.initDataUnsafe?.user || { id: 12345, username: "локальный_тест" };
+        const API_URL = window.location.origin;
+
+        document.getElementById('username').innerText = user.username ? `@${user.username}` : 'Без юзернейма';
+        document.getElementById('tg-id').innerText = user.id;
+
+        async function loadProfile() {
+            try {
+                const response = await fetch(`${API_URL}/api/profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tg_id: user.id, username: user.username || `id_${user.id}` })
+                });
+                const data = await response.json();
+                document.getElementById('user-balance').innerText = `${data.coins} VNT`;
+                document.getElementById('user-stars').innerText = `Использовано звезд: ${data.stars_spent} ⭐`;
+            } catch (err) {
+                console.error("Ошибка обновления баланса VNT", err);
+            }
+        }
+
+        function switchTab(tabName, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active-tab'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active-tab');
+            btnElement.classList.add('active');
+        }
+
+        async function makeTransfer() {
+            const recipient = document.getElementById('transfer-username').value;
+            const amount = parseInt(document.getElementById('transfer-amount').value);
+
+            if(!recipient || !amount || amount <= 0) {
+                tg.showAlert("Укажите корректного получателя и сумму!");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/transfer`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sender_id: user.id,
+                        recipient_username: recipient,
+                        amount: amount
+                    })
+                });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    tg.showAlert(`Успешно! ${result.message}`);
+                    document.getElementById('transfer-username').value = '';
+                    document.getElementById('transfer-amount').value = '';
+                    loadProfile();
+                } else {
+                    tg.showAlert(`Ошибка: ${result.detail}`);
+                }
+            } catch (err) {
+                tg.showAlert("Ошибка связи с сервером VNT");
+            }
+        }
+
+        async function buyWithStars() {
+            try {
+                const response = await fetch(`${API_URL}/api/buy-stars`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tg_id: user.id, username: user.username || `id_${user.id}` })
+                });
+                const data = await response.json();
+                
+                if (data.invoice_link) {
+                    tg.openInvoice(data.invoice_link, function(status) {
+                        if (status === 'paid') {
+                            tg.showAlert("Оплата принята! 1000 VNT будут зачислены на ваш счет.");
+                            setTimeout(loadProfile, 3000);
+                        } else if (status === 'cancelled') {
+                            tg.showAlert("Транзакция отменена.");
+                        } else {
+                            tg.showAlert("Статус транзакции обрабатывается.");
+                        }
+                    });
+                }
+            } catch (err) {
+                tg.showAlert("Ошибка создания счета.");
+            }
+        }
+
+        loadProfile();
+    </script>
+</body>
+</html>`
