@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VNT Банк</title>
+    <title>Ventaria Bank</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --bg-color: #f7f9fc;
@@ -42,10 +43,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        h2 { 
-            color: var(--accent-color); 
-            margin-bottom: 20px; 
-        }
+        h2 { color: var(--accent-color); margin-bottom: 20px; }
 
         .nav-bar {
             display: flex;
@@ -63,28 +61,16 @@
             color: var(--accent-color);
             font-weight: 600;
             padding: 5px 10px;
-            transition: opacity 0.2s;
         }
 
-        .nav-btn:hover {
-            opacity: 0.8;
-        }
-
-        .tab-content { 
-            display: none; 
-        }
-
-        .tab-content.active { 
-            display: block; 
-            animation: slideIn 0.4s ease-out; 
-        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: slideIn 0.4s ease-out; }
 
         @keyframes slideIn {
             from { opacity: 0; transform: translateX(-15px); }
             to { opacity: 1; transform: translateX(0); }
         }
 
-        /* Стили профиля */
         .profile-box {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -93,23 +79,11 @@
             margin-bottom: 20px;
             text-align: left;
         }
-        .profile-box p {
-            margin: 5px 0;
-            font-size: 14px;
-        }
-        .profile-box span {
-            font-weight: bold;
-            color: var(--accent-color);
-        }
+        .profile-box p { margin: 5px 0; font-size: 14px; }
+        .profile-box span { font-weight: bold; color: var(--accent-color); }
 
-        .balance { 
-            font-size: 28px; 
-            font-weight: bold; 
-            margin: 15px 0; 
-            color: #2b2b2b;
-        }
+        .balance { font-size: 28px; font-weight: bold; margin: 15px 0; color: #2b2b2b; }
 
-        /* Форма доната/пополнения */
         .donate-section {
             background: #fff;
             border: 1px dashed var(--accent-color);
@@ -117,37 +91,9 @@
             border-radius: 12px;
             margin-top: 20px;
         }
-        .donate-section h4 {
-            margin-top: 0;
-            margin-bottom: 15px;
-            color: #333;
-        }
-        .input-group {
-            margin-bottom: 15px;
-            text-align: left;
-        }
-        .input-group label {
-            display: block;
-            font-size: 12px;
-            margin-bottom: 5px;
-            color: #666;
-        }
-        .input-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-sizing: border-box;
-            font-size: 16px;
-        }
-        .calc-text {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 15px;
-        }
-        .calc-text strong {
-            color: var(--success-color);
-        }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        .input-group label { display: block; font-size: 12px; margin-bottom: 5px; color: #666; }
+        .input-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
 
         .btn-action {
             width: 100%;
@@ -159,10 +105,6 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-action:hover {
-            background-color: #218838;
         }
 
         .history-item {
@@ -172,7 +114,6 @@
             border-radius: 8px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
         }
     </style>
 </head>
@@ -197,125 +138,124 @@
         <div class="balance"><span id="balance-value">0</span> VNT</div>
 
         <div class="donate-section">
-            <h4>Пополнение баланса (Звёзды)</h4>
+            <h4>Пополнение баланса (Реальные Звёзды)</h4>
             <div class="input-group">
-                <label for="stars-input">Сколько звёзд хотите задонатить?</label>
+                <label for="stars-input">Сколько звёзд Telegram хотите внести?</label>
                 <input type="number" id="stars-input" value="1" min="1" oninput="calculateVnt()">
             </div>
             
-            <div class="calc-text">
-                К зачислению: <strong id="vnt-calc">1</strong> VNT <br>
-                <small style="color: #999;">(Курс: 1 звезда = 1 VNT)</small>
-            </div>
+            <p style="font-size: 13px; color: #666;">К зачислению: <strong id="vnt-calc" style="color: var(--success-color);">1</strong> VNT</p>
 
-            <button class="btn-action" onclick="sendDonate()">Купить пополнение</button>
+            <button class="btn-action" onclick="buyWithRealStars()">Оплатить Звёздами</button>
         </div>
 
     </div>
 
     <div id="tab-history" class="tab-content">
         <h3>История операций</h3>
-        <div class="history-list" id="history-container">
-            <div class="history-item">
-                <span>Стартовый бонус</span>
-                <span style="color: #28a745; font-weight: bold;">+0</span>
-            </div>
-        </div>
+        <div class="history-list" id="history-container"></div>
     </div>
 </div>
 
 <script>
-    // Тестовые данные (если страница открыта не из Telegram, подставятся они)
-    let currentUserId = 12345678;
-    let currentUsername = "Nikita_User";
+    // Инициализируем Telegram WebApp
+    const tg = window.Telegram ? window.Telegram.WebApp : null;
+    
+    // Если открыто внутри Telegram, получаем НАСТОЯЩИЙ профиль пользователя
+    let currentUserId = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user.id : 12345678;
+    let currentUsername = tg && tg.initDataUnsafe && tg.initDataUnsafe.user ? (tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name) : "Браузерный_Тест";
 
-    // Пытаемся получить реальные данные из Telegram WebApp, если скрипт запущен там
-    try {
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.ready();
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                currentUserId = tg.initDataUnsafe.user.id;
-                currentUsername = tg.initDataUnsafe.user.username || tg.initDataUnsafe.user.first_name;
-            }
-        }
-    } catch (e) {
-        console.log("Запущено вне Telegram WebApp, используем тестовый профиль");
+    if (tg) {
+        tg.ready();
+        tg.expand(); // Разворачиваем приложение на весь экран телефона
     }
 
-    // Выводим данные профиля на экран при загрузке страницы
     document.getElementById("username-display").innerText = "@" + currentUsername;
     document.getElementById("userid-display").innerText = currentUserId;
 
-    // Автоматический подсчет VNT при изменении количества звёзд
-    function calculateVnt() {
-        const starsInput = document.getElementById("stars-input").value;
-        const stars = parseInt(starsInput) || 0;
-        // Курс 1 звезда = 1 вент
-        const vnt = stars * 1; 
-        document.getElementById("vnt-calc").innerText = vnt;
+    async function loadProfile() {
+        try {
+            const response = await fetch('/get_profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: currentUserId })
+            });
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById("balance-value").innerText = data.balance;
+                renderHistory(data.history);
+            }
+        } catch (e) { console.error(e); }
     }
 
-    // Переключение между вкладками
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-content').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        const activeTab = document.getElementById('tab-' + tabId);
-        if (activeTab) {
-            activeTab.classList.add('active');
+    function renderHistory(history) {
+        const container = document.getElementById("history-container");
+        container.innerHTML = "";
+        if(!history || history.length === 0) {
+            container.innerHTML = "<p style='color:#999;'>История пуста</p>";
+            return;
         }
+        history.slice().reverse().forEach(item => {
+            container.innerHTML += `<div class="history-item"><span>${item.type}</span><span style="color:#28a745; font-weight:bold;">${item.amount}</span></div>`;
+        });
     }
 
-    // Функция отправки доната на бэкенд FastAPI
-    async function sendDonate() {
-        const starsInput = document.getElementById("stars-input").value;
-        const starsCount = parseInt(starsInput);
+    function calculateVnt() {
+        const val = document.getElementById("stars-input").value;
+        document.getElementById("vnt-calc").innerText = parseInt(val) || 0;
+    }
 
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // НАСТОЯЩАЯ ОПЛАТА ЗВЁЗДАМИ TELEGRAM
+    async function buyWithRealStars() {
+        const starsCount = parseInt(document.getElementById("stars-input").value);
         if (!starsCount || starsCount <= 0) {
-            alert("Введите корректное число звёзд!");
+            alert("Укажите верное количество звёзд!");
             return;
         }
 
-        // Данные запроса, соответствующие схеме BuyStarsRequest в server.py
-        const requestData = {
-            user_id: currentUserId,
-            stars: starsCount
-        };
+        if (!tg || !tg.initDataUnsafe.user) {
+            alert("Реальная оплата звёздами работает только внутри Telegram Mini App!");
+            return;
+        }
 
         try {
-            // Делаем POST-запрос на наш сервер
-            const response = await fetch('/buy_stars', {
+            // 1. Просим наш бэкенд создать инвойс-ссылку через Bot API
+            const response = await fetch('/create_invoice', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestData)
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: currentUserId, stars: starsCount })
             });
 
-            if (response.ok) {
-                const result = await response.json();
-                alert(`Успешно! Вы отправили ${starsCount} звёзд.`);
-                
-                // Обновляем баланс на экране (1 звезда = 1 VNT)
-                const currentBalance = parseInt(document.getElementById("balance-value").innerText) || 0;
-                const newBalance = currentBalance + starsCount;
-                document.getElementById("balance-value").innerText = newBalance;
-
-                // Добавляем запись в историю
-                const historyContainer = document.getElementById("history-container");
-                const newItem = document.createElement("div");
-                newItem.className = "history-item";
-                newItem.innerHTML = `<span>Покупка звёзд</span><span style="color: #28a745; font-weight: bold;">+${starsCount} VNT</span>`;
-                historyContainer.insertBefore(newItem, historyContainer.firstChild);
+            const data = await response.json();
+            
+            if (data.status === "success" && data.invoice_link) {
+                // 2. Открываем нативное окно оплаты звёзд в интерфейсе Telegram
+                tg.openInvoice(data.invoice_link, function(status) {
+                    if (status === 'paid') {
+                        alert("Оплата прошла успешно! Баланс обновится.");
+                        // Перезагружаем профиль, чтобы увидеть обновленный баланс
+                        setTimeout(loadProfile, 2000);
+                    } else if (status === 'cancelled') {
+                        alert("Вы отменили оплату.");
+                    } else {
+                        alert("Ошибка при проведении платежа.");
+                    }
+                });
             } else {
-                alert("Ошибка сервера при обработке платежа.");
+                alert("Не удалось сгенерировать чек для оплаты.");
             }
         } catch (error) {
-            console.error("Ошибка:", error);
-            alert("Не удалось связаться с сервером. Проверьте сеть или логи.");
+            console.error(error);
+            alert("Ошибка соединения с бэкендом.");
         }
     }
+
+    loadProfile();
 </script>
 
 </body>
