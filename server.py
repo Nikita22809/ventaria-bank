@@ -7,10 +7,10 @@ from pydantic import BaseModel
 from aiogram import Bot
 
 # === НАСТРОЙКИ ===
-BOT_TOKEN = 8994297709:AAF6-5MaQghke6xdgMxezpr31a2KXT0YwDg
+BOT_TOKEN = "8994297709:AAF6-5MaQghke6xdgMxezpr31a2KXT0YwDg"
 
 app = FastAPI()
-bot = Bot(8994297709:AAF6-5MaQghke6xdgMxezpr31a2KXT0YwDg)
+bot = Bot("8994297709:AAF6-5MaQghke6xdgMxezpr31a2KXT0YwDg")
 
 # Разрешаем CORS, чтобы Web App мог делать запросы к серверу
 app.add_middleware(
