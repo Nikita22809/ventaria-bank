@@ -60,11 +60,11 @@ async def get_profile(data: UserRequest):
     row = cursor.fetchone()
     
     if not row:
-        # Если пользователя нет, регистрируем и дарим 1000 VNT
+        # Если пользователя нет, регистрируем и дарим 0 VNT
         cursor.execute("INSERT INTO users (tg_id, username, coins) VALUES (?, ?, ?)", 
-                       (data.tg_id, data.username, 1000))
+                       (data.tg_id, data.username, 0))
         conn.commit()
-        coins, stars_spent = 1000, 0
+        coins, stars_spent = 0, 0
     else:
         coins, stars_spent = row
         cursor.execute("UPDATE users SET username = ? WHERE tg_id = ?", (data.username, data.tg_id))
