@@ -4,126 +4,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VNT Банк</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
-            --bg-color: var(--tg-theme-bg-color, #ffffff);
-            --text-color: var(--tg-theme-text-color, #000000);
-            --accent-color: #3390ec;
-            --secondary-bg: var(--tg-theme-secondary-bg-color, #f1f1f1);
+            --bg-color: #f7f9fc;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --accent-color: #4a6fa5;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        body.dark-theme {
-            --bg-color: #212121;
-            --text-color: #ffffff;
-            --secondary-bg: #181818;
-        }
+        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
         }
+
+        /* Анимация плавного появления контейнера */
         .container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 15px;
-            box-sizing: border-box;
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            animation: fadeIn 0.6s ease-out;
         }
-        .tab {
-            display: none;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        .tab.active {
-            display: block;
-        }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
+
+        h2 { 
+            color: var(--accent-color); 
+            margin-bottom: 20px; 
         }
-        .balance-card {
-            background-color: var(--secondary-bg);
-            padding: 20px;
-            border-radius: 16px;
-            text-align: center;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .balance-amount {
-            font-size: 32px;
-            font-weight: bold;
-            color: var(--accent-color);
-            margin: 10px 0;
-        }
+
         .nav-bar {
             display: flex;
             justify-content: space-around;
-            background-color: var(--secondary-bg);
-            padding: 10px;
-            border-radius: 12px;
             margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
         }
-        .nav-item {
+
+        .nav-btn {
             background: none;
             border: none;
-            color: var(--text-color);
             font-size: 16px;
             cursor: pointer;
-            padding: 10px 20px;
-            border-radius: 8px;
-            transition: all 0.3s ease;
+            color: var(--accent-color);
+            font-weight: 600;
+            padding: 5px 10px;
+            transition: opacity 0.2s;
         }
-        .nav-item.active {
-            background-color: var(--accent-color);
-            color: #ffffff;
+
+        .nav-btn:hover {
+            opacity: 0.8;
         }
-        .circle-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: var(--accent-color);
-            color: #ffffff;
-            border: none;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            margin: 0 auto;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
+
+        .tab-content { 
+            display: none; 
         }
-        .circle-btn:active {
-            transform: scale(0.95);
+
+        /* Анимация сдвига при переключении вкладок */
+        .tab-content.active { 
+            display: block; 
+            animation: slideIn 0.4s ease-out; 
         }
-        .theme-toggle {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: var(--text-color);
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-15px); }
+            to { opacity: 1; transform: translateX(0); }
         }
-        .history-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
+
+        .balance { 
+            font-size: 26px; 
+            font-weight: bold; 
+            margin: 20px 0; 
+            color: #2b2b2b;
         }
+
         .history-item {
-            background-color: var(--secondary-bg);
-            padding: 10px 15px;
-            border-radius: 8px;
+            background: #f1f3f5;
+            padding: 12px;
             margin-bottom: 10px;
+            border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -132,73 +105,47 @@
 </head>
 <body>
 
-    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
-
-    <div class="container">
-        <div class="header">
-            <h2>VNT Банк</h2>
-        </div>
-
-        <div class="nav-bar">
-            <button class="nav-item active" onclick="switchTab('main')">Главная</button>
-            <button class="nav-item" onclick="switchTab('transfer')">Переводы</button>
-            <button class="nav-item" onclick="switchTab('profile')">Профиль</button>
-        </div>
-
-        <!-- Главная вкладка -->
-        <div id="tab-main" class="tab active">
-            <div class="balance-card">
-                <div>Ваш баланс:</div>
-                <div class="balance-amount">0 VNT</div>
-            </div>
-            <button class="circle-btn" onclick="switchTab('transfer')">⇄</button>
-        </div>
-
-        <!-- Вкладка переводов -->
-        <div id="tab-transfer" class="tab">
-            <h3>Перевод VNT</h3>
-            <p>Здесь будет форма для перевода.</p>
-        </div>
-
-        <!-- Вкладка профиля -->
-        <div id="tab-profile" class="tab">
-            <h3>Профиль</h3>
-            <div class="balance-card">
-                <p><strong>ID:</strong> <span id="user-id">Загрузка...</span></p>
-                <p><strong>Имя:</strong> <span id="user-name">Загрузка...</span></p>
-            </div>
-            <h4>История покупок звёзд:</h4>
-            <ul class="history-list">
-                <li class="history-item">
-                    <span>Покупка: 1000 VNT</span>
-                    <span>10 ⭐</span>
-                </li>
-            </ul>
-        </div>
+<div class="container">
+    <h2>VNT Банк</h2>
+    <div class="nav-bar">
+        <button class="nav-btn" onclick="switchTab('main')">Главная</button>
+        <button class="nav-btn" onclick="switchTab('history')">История</button>
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.ready();
+    <div id="tab-main" class="tab-content active">
+        <p>Ваш баланс:</p>
+        <div class="balance">0 VNT</div>
+    </div>
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+    <div id="tab-history" class="tab-content">
+        <h3>История операций</h3>
+        <div class="history-list">
+            <div class="history-item">
+                <span>Пополнение</span>
+                <span style="color: #28a745; font-weight: bold;">+500</span>
+            </div>
+            <div class="history-item">
+                <span>Перевод</span>
+                <span style="color: #dc3545; font-weight: bold;">-200</span>
+            </div>
+        </div>
+    </div>
+</div>
 
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            
-            // Находим кнопку, соответствующую вкладке
-            const btnIndex = ['main', 'transfer', 'profile'].indexOf(tabId);
-            document.querySelectorAll('.nav-item')[btnIndex].classList.add('active');
+<script>
+    // Функция переключения вкладок
+    function switchTab(tabId) {
+        // Скрываем все вкладки
+        document.querySelectorAll('.tab-content').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        // Показываем нужную
+        const activeTab = document.getElementById('tab-' + tabId);
+        if (activeTab) {
+            activeTab.classList.add('active');
         }
+    }
+</script>
 
-        function toggleTheme() {
-            document.body.classList.toggle('dark-theme');
-        }
-
-        // Пример получения данных из Telegram WebApp
-        document.getElementById('user-id').innerText = tg.initDataUnsafe?.user?.id || '---';
-        document.getElementById('user-name').innerText = tg.initDataUnsafe?.user?.first_name || 'Гость';
-    </script>
 </body>
 </html>
