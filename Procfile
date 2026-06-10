@@ -1,5 +1,1 @@
-fastapi
-uvicorn
-aiogram
-pydantic
-web: uvicorn server:app --host 0.0.0.0 --port $PORT
+web: uvicorn server:app --host 0.0.0.0 --port $PORT
