@@ -17,7 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
+BOT_TOKEN = os.environ.get("8994297709:AAF6-5MaQghke6xdgMxezpr31a2KXT0YwDg")
 
 class CreateInvoiceRequest(BaseModel):
     user_id: int
